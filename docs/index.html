@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Omics ML Explorer</title>
+<meta name="description" content="R Shiny interface for protease classifiers in prostate cancer, ML feature selection in PDAC, and longitudinal biomarker analysis in uveal melanoma.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f7f8f7; --surface:#ffffff; --fg:#17212b; --muted:#5b6672; --line:#e3e7e6;
+  --accent:#1f6f78; --accent-ink:#0f4c53; --accent-soft:#e2f0f1; --nav:#123f44;
+  --code-bg:#0f2a2e; --code-fg:#dff3f1; --warn:#fff6e0; --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1417; --surface:#161d21; --fg:#e6ecee; --muted:#9aa7ad; --line:#26323a;
+    --accent:#5cc0c8; --accent-ink:#8fd8de; --accent-soft:#17343a; --nav:#0b2528;
+    --code-bg:#0a1a1d; --code-fg:#d7efed; --warn:#352c16;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1417; --surface:#161d21; --fg:#e6ecee; --muted:#9aa7ad; --line:#26323a;
+  --accent:#5cc0c8; --accent-ink:#8fd8de; --accent-soft:#17343a; --nav:#0b2528;
+  --code-bg:#0a1a1d; --code-fg:#d7efed; --warn:#352c16;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.65 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+a{color:var(--accent)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 16px}
+nav.top{background:var(--nav);color:#fff;position:sticky;top:0;z-index:10}
+nav.top .wrap{display:flex;align-items:center;gap:20px;height:56px}
+nav.top .brand{font-weight:700;letter-spacing:-.01em;color:#fff;text-decoration:none;display:flex;gap:8px;align-items:center}
+nav.top .links{display:flex;gap:18px;margin-left:auto;font-size:.93rem}
+nav.top .links a{color:#cfe6e8;text-decoration:none}
+nav.top .links a:hover{color:#fff}
+@media (max-width:720px){nav.top .links a.opt{display:none}}
+header.hero{padding:64px 0 40px}
+.eyebrow{font-size:.82rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+h1{font-size:clamp(2rem,4.5vw,3.1rem);line-height:1.1;letter-spacing:-.025em;margin:.35em 0 .4em}
+.lead{font-size:1.18rem;color:var(--muted);max-width:760px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-top:26px}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 18px;border-radius:10px;font-weight:600;text-decoration:none;font-size:.95rem}
+.btn.primary{background:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#062326}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .btn.primary{color:#062326}}
+.btn.ghost{border:1px solid var(--line);color:var(--fg);background:var(--surface)}
+.shot{margin-top:40px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line);box-shadow:0 18px 50px -24px rgba(10,40,45,.35);background:var(--surface)}
+.shot img{display:block;width:100%;height:auto}
+.note{background:var(--warn);border-radius:10px;padding:12px 16px;font-size:.93rem;margin:28px 0 0}
+section{padding:56px 0;border-top:1px solid var(--line)}
+h2{font-size:1.75rem;letter-spacing:-.02em;margin:0 0 .3em}
+h3{font-size:1.15rem;margin:1.4em 0 .4em}
+.sub{color:var(--muted);max-width:760px;margin-top:0}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:28px}
+@media (max-width:900px){.cards{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:22px}
+.card .tag{display:inline-block;font-size:.75rem;font-weight:600;color:var(--accent-ink);background:var(--accent-soft);padding:3px 9px;border-radius:99px}
+.card h3{margin:.6em 0 .35em}
+.card p{margin:.3em 0;color:var(--muted);font-size:.95rem}
+.card a{font-weight:600;font-size:.93rem;text-decoration:none}
+.module{display:grid;grid-template-columns:5fr 7fr;gap:36px;align-items:start}
+.module.flip{grid-template-columns:7fr 5fr}
+.module.flip .text{order:2}
+@media (max-width:900px){.module,.module.flip{grid-template-columns:1fr}.module.flip .text{order:0}}
+.module ul{padding-left:1.1em;margin:.4em 0}
+.module li{margin:.25em 0}
+.gallery{display:grid;gap:14px}
+.module>*,.steps>*,.cards>*,.gallery>*{min-width:0}
+pre{max-width:100%}
+.gallery .shot{margin-top:0}
+.caption{font-size:.85rem;color:var(--muted);margin:6px 2px 0}
+code,pre{font-family:"JetBrains Mono",ui-monospace,Menlo,monospace}
+p code,li code,td code{background:var(--accent-soft);color:var(--accent-ink);padding:1px 6px;border-radius:5px;font-size:.88em}
+pre{background:var(--code-bg);color:var(--code-fg);padding:18px 20px;border-radius:12px;overflow-x:auto;font-size:.88rem;line-height:1.6}
+pre .c{color:#7fa9a6}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+@media (max-width:900px){.steps{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;font-size:.93rem;background:var(--surface);border-radius:12px;overflow:hidden}
+th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-weight:600;background:var(--accent-soft);color:var(--accent-ink)}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+footer{padding:40px 0 60px;color:var(--muted);font-size:.9rem;border-top:1px solid var(--line)}
+</style>
+</head>
+<body>
+<nav class="top"><div class="wrap">
+  <a class="brand" href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="4" cy="6" r="2"/><circle cx="20" cy="6" r="2"/><circle cx="4" cy="18" r="2"/><circle cx="20" cy="18" r="2"/><path d="M6 7l4 3M18 7l-4 3M6 17l4-3M18 17l-4-3"/></svg>Omics ML Explorer</a>
+  <div class="links">
+    <a class="opt" href="#modules">Modules</a>
+    <a class="opt" href="#run">Run it</a>
+    <a class="opt" href="#data">Data formats</a>
+    <a href="https://github.com/sushmitapaul1/omics-ml-explorer">GitHub</a>
+  </div>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <div class="eyebrow">R Shiny · caret · feature selection · longitudinal biomarkers</div>
+  <h1>Three cancer-biomarker analyses,<br>one interactive app.</h1>
+  <p class="lead">Omics ML Explorer turns a set of R analysis scripts into a point-and-click interface: classifiers for a prostate-cancer protease panel, robust feature selection in pancreatic cancer (PDAC), and longitudinal biomarker monitoring in uveal melanoma.</p>
+  <div class="cta">
+    <a class="btn primary" href="#run">Run the app</a>
+    <a class="btn ghost" href="https://github.com/sushmitapaul1/omics-ml-explorer">View source on GitHub</a>
+  </div>
+  <div class="shot"><img src="img/overview.png" alt="Overview page of the Omics ML Explorer app, with one card per analysis module" loading="eager"></div>
+  <p class="note"><strong>Demo data only.</strong> All bundled datasets are simulated. They copy the structure of the real studies (column names, group sizes, visit layout) but contain no patient information. Each module also accepts your own CSV.</p>
+</div></header>
+
+<section id="modules"><div class="wrap">
+  <h2>What's inside</h2>
+  <p class="sub">Each module follows one of the original analysis scripts, with the key settings exposed as controls and the results shown as tables and plots you can download.</p>
+  <div class="cards">
+    <div class="card"><span class="tag">Module 1</span><h3>Prostate cancer: protease classifiers</h3><p>BPH vs PCa. Six classifiers trained over repeated random train/test splits, with any subset of proteases and PSA as features.</p><a href="#prostate">Details →</a></div>
+    <div class="card"><span class="tag">Module 2</span><h3>PDAC: feature selection + classification</h3><p>Four selection methods, a consensus protein panel, then six classifiers evaluated on held-out patients.</p><a href="#pdac">Details →</a></div>
+    <div class="card"><span class="tag">Module 3</span><h3>Uveal melanoma: longitudinal analysis</h3><p>Biomarker trajectories across visits, flagged against a reference band derived from control patients.</p><a href="#uveal">Details →</a></div>
+  </div>
+</div></section>
+
+<section id="prostate"><div class="wrap module">
+  <div class="text">
+    <div class="eyebrow">Module 1</div>
+    <h2>Protease classifiers in prostate cancer</h2>
+    <p class="sub">Can a panel of blood proteases tell prostate cancer apart from benign enlargement, and does it add anything to PSA?</p>
+    <ul>
+      <li>Repeated random 80/20 train/test splits (stratified by class, optional)</li>
+      <li>SVM (linear, class-weighted, or radial), random forest, MLP, KNN, naive Bayes and GBM via <code>caret::train</code>, tuned with repeated k-fold CV on ROC</li>
+      <li>Feature presets: all proteases + PSA, proteases only, PSA only, or a custom set</li>
+      <li>Outputs: mean ± SD of training-CV and test AUC, accuracy, sensitivity and specificity; AUC spread across splits; ROC curves per split; per-split CSV</li>
+    </ul>
+  </div>
+  <div class="gallery">
+    <div class="shot"><img src="img/prostate_performance.png" alt="Performance table and AUC box plots for six classifiers" loading="lazy"></div>
+    <div class="shot"><img src="img/prostate_roc.png" alt="ROC curves for training cross-validation and the held-out test set" loading="lazy"></div>
+    <p class="caption">Simulated data: 60 BPH and 60 PCa samples, 10 proteases + PSA.</p>
+  </div>
+</div></section>
+
+<section id="pdac"><div class="wrap module flip">
+  <div class="text">
+    <div class="eyebrow">Module 2</div>
+    <h2>Feature selection and classification in PDAC</h2>
+    <p class="sub">Few patients and many proteins: which proteins are reliably informative, and how well does a small panel classify patients it has not seen?</p>
+    <h3>Step 1: four complementary selectors</h3>
+    <ul>
+      <li><b>Stability selection</b>: elastic net (<code>glmnet</code>) refit on many subsamples</li>
+      <li><b>Boruta</b>: random forest compared against shuffled shadow features</li>
+      <li><b>RFE-CV</b>: recursive feature elimination with repeated CV</li>
+      <li><b>mRMR</b>: minimum redundancy, maximum relevance (<code>praznik</code>)</li>
+    </ul>
+    <p>A <b>consensus</b> counts votes across the methods and ranks proteins with Robust Rank Aggregation. You choose how many votes a protein needs to join the panel.</p>
+    <h3>Step 2: classify on held-out patients</h3>
+    <p>The same six classifiers are tuned on the training split and tested once on the held-out 20%. By default, feature selection sees only the training split, so the test AUC is not inflated by selection bias.</p>
+  </div>
+  <div class="gallery">
+    <div class="shot"><img src="img/pdac_feature_selection.png" alt="Consensus votes, stability selection frequencies and RFE-CV profile" loading="lazy"></div>
+    <div class="shot"><img src="img/pdac_classification.png" alt="Classifier results on the consensus panel, with CV AUC per fold and held-out ROC curves" loading="lazy"></div>
+    <p class="caption">Simulated data: 25 vs 25 patients, 80 Olink-style proteins.</p>
+  </div>
+</div></section>
+
+<section id="uveal"><div class="wrap module">
+  <div class="text">
+    <div class="eyebrow">Module 3</div>
+    <h2>Longitudinal biomarker monitoring in uveal melanoma</h2>
+    <p class="sub">Does a patient's biomarker leave the normal range during follow-up, and when?</p>
+    <ul>
+      <li>A reference band is derived from control patients only: control mean ± z × residual SD of <code>lm(Biomarker ~ days + ClinicalNumber)</code></li>
+      <li>Every measurement is flagged as significantly high (▲), significantly low (▼) or normal (●), and coloured by visit</li>
+      <li>Adjustable band width (z), group filter, patient highlighting and labels</li>
+      <li>Patient summary with flagged visits, day of the first high value and each patient's own trend; export as PNG or CSV</li>
+    </ul>
+  </div>
+  <div class="gallery">
+    <div class="shot"><img src="img/uveal_trajectories.png" alt="Biomarker trajectories for control and metastasized patients with threshold band" loading="lazy"></div>
+    <p class="caption">Simulated data: 10 control and 10 metastasized patients, 4 visits each.</p>
+  </div>
+</div></section>
+
+<section id="run"><div class="wrap">
+  <h2>Run the app</h2>
+  <p class="sub">The app runs in R on your own computer. GitHub Pages hosts this page, but it can't run R, so the app itself needs a local R session or a Shiny server.</p>
+  <div class="steps">
+    <div>
+      <h3>Straight from GitHub</h3>
+<pre><span class="c"># in R (version 4.1 or later)</span>
+install.packages("shiny")
+source("https://raw.githubusercontent.com/sushmitapaul1/omics-ml-explorer/main/install.R")
+shiny::runGitHub("omics-ml-explorer", "sushmitapaul1")</pre>
+    </div>
+    <div>
+      <h3>From a local copy</h3>
+<pre><span class="c"># in a terminal</span>
+git clone https://github.com/sushmitapaul1/omics-ml-explorer.git
+cd omics-ml-explorer
+Rscript install.R
+Rscript -e 'shiny::runApp(launch.browser = TRUE)'</pre>
+    </div>
+  </div>
+</div></section>
+
+<section id="data"><div class="wrap">
+  <h2>Input data formats</h2>
+  <p class="sub">Each module includes a download link for its dummy CSV, which you can use as a template.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Module</th><th>Layout</th><th>Required columns</th></tr></thead>
+    <tbody>
+      <tr><td>Prostate cancer</td><td>Wide: one row per sample</td><td>Numeric features (<code>Cath.G</code>, <code>ADAM10</code>, …, <code>PSA</code>) and a two-level class column (<code>Class</code>: BPH / PCa)</td></tr>
+      <tr><td>PDAC</td><td>Wide: one row per patient</td><td>A two-level group column (<code>Group</code>), one numeric column per protein, and an optional ID column (excluded in the sidebar, together with the grouping marker <code>CTSG</code>)</td></tr>
+      <tr><td>Uveal melanoma</td><td>Long: one row per measurement</td><td><code>SampleID</code>, <code>Class</code>, <code>ClinicalNumber</code>, <code>days</code>, <code>Biomarker</code>, and an optional <code>Label</code></td></tr>
+    </tbody>
+  </table></div>
+</div></section>
+
+<footer><div class="wrap">
+  Dr. Sushmita Paul · Laboratory of Systems Tumor Immunology, Department of Dermatology, University Hospital Erlangen (FAU Erlangen-Nürnberg).<br>
+  Built with R Shiny, bslib, caret, pROC, glmnet, Boruta, praznik and RobustRankAggreg. Demo datasets are simulated.
+</div></footer>
+</body>
+</html>

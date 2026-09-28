@@ -28,12 +28,17 @@ module_card <- function(title, icon_name, what, data, target) {
   )
 }
 
-ui <- page_navbar(
+# bslib >= 0.9 groups navbar colours in navbar_options(); older versions take bg/inverse directly
+navbar_args <- if ("navbar_options" %in% getNamespaceExports("bslib")) {
+  list(navbar_options = bslib::navbar_options(bg = "#123f44", theme = "dark"))
+} else {
+  list(bg = "#123f44", inverse = TRUE)
+}
+
+ui <- do.call(page_navbar, c(list(
   id = "main",
   title = span(icon("microscope"), " Omics ML Explorer"),
   theme = theme,
-  bg = "#123f44",
-  inverse = TRUE,
   fillable = FALSE,
   header = tags$head(tags$style(HTML("
     .method-note { max-width: 820px; line-height: 1.6; }
@@ -76,7 +81,7 @@ ui <- page_navbar(
   nav_panel("Uveal melanoma", icon = icon("chart-line"), value = "uveal", uveal_ui("uveal")),
   nav_spacer(),
   nav_item(a(icon("github"), href = "https://github.com/sushmitapaul1/omics-ml-explorer", target = "_blank"))
-)
+), navbar_args))
 
 server <- function(input, output, session) {
   for (t in c("prostate", "pdac", "uveal")) local({
